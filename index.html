@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>QR Attendance System</title>
 
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://unpkg.com/html5-qrcode"></script>
+<title>QR Attendance System</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 </head>
 
@@ -13,21 +18,27 @@
 
 <div class="container">
 
-<h1>
-QR Attendance System
-</h1>
+    <h1>QR Attendance System</h1>
 
+    <!-- QR Scanner -->
+    <div id="reader"></div>
 
-<div id="reader"></div>
+    <!-- Attendance Result -->
+    <div id="attendanceResult">
 
+        <h2 id="studentName"></h2>
 
-<h2 id="result">
-Waiting for scan...
-</h2>
+        <h2 id="action"></h2>
 
+        <h3 id="scanTime"></h3>
+
+        <h3 id="status"></h3>
+
+        <h2 id="result">Waiting for scan...</h2>
+
+    </div>
 
 </div>
-
 
 <script src="script.js"></script>
 
