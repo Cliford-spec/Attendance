@@ -1,137 +1,113 @@
 const WEB_APP_URL =
 "https://script.google.com/macros/s/AKfycbyutbyoY5Y64Zt7uuUxGLrAhIwQYfTkbLovfaqhFfxGO08W1Y8Os3wJAfMHLTcZ_Lme/exec";
 
-
 let scanned = false;
 
+function clearDisplay() {
+    document.getElementById("studentName").textContent = "";
+    document.getElementById("action").textContent = "";
+    document.getElementById("scanTime").textContent = "";
+    document.getElementById("status").textContent = "";
+    document.getElementById("result").textContent = "Waiting for scan...";
+}
 
-function onScanSuccess(decodedText, decodedResult) {
+async function onScanSuccess(decodedText) {
 
-    if(scanned){
-        return;
-    }
+    if (scanned) return;
 
     scanned = true;
 
+    const studentID = decodedText.trim();
 
-    console.log("QR Code:", decodedText);
+    document.getElementById("result").textContent = "Checking attendance...";
 
+    try {
 
-    document.getElementById("result").innerHTML =
-    "Checking attendance...";
+        const controller = new AbortController();
 
+        const timeout = setTimeout(() => controller.abort(), 10000);
 
-    let studentID = decodedText.trim();
-
-
-    fetch(WEB_APP_URL + "?id=" + studentID)
-
-
-    .then(response => response.json())
-
-
-    .then(data => {
-
-
-        if(data.success){
-
-
-            let status = "";
-
-            if(data.action === "timein"){
-                status = "TIME IN SUCCESSFUL";
+        const response = await fetch(
+            WEB_APP_URL + "?id=" + encodeURIComponent(studentID),
+            {
+                signal: controller.signal
             }
-            else if(data.action === "timeout"){
-                status = "TIME OUT SUCCESSFUL";
-            }
+        );
 
+        clearTimeout(timeout);
 
-            document.getElementById("result").innerHTML = `
+        const data = await response.json();
 
-                <h2>${data.name}</h2>
+        if (data.success) {
 
-                <h3>${status}</h3>
+            document.getElementById("studentName").textContent = data.name;
 
-                <p>${data.time}</p>
+            document.getElementById("action").textContent =
+                data.action === "timein"
+                ? "TIME IN SUCCESSFUL"
+                : "TIME OUT SUCCESSFUL";
 
-            `;
+            document.getElementById("scanTime").textContent =
+                data.time;
 
+            document.getElementById("status").textContent =
+                "STATUS: " + data.status;
 
-        }
-        else{
+            document.getElementById("result").textContent = "";
 
+        } else {
 
-            document.getElementById("result").innerHTML = `
+            document.getElementById("studentName").textContent = "";
 
-            <h3>${data.message}</h3>
+            document.getElementById("action").textContent = "";
 
-            `;
+            document.getElementById("scanTime").textContent = "";
 
+            document.getElementById("status").textContent = "";
+
+            document.getElementById("result").textContent =
+                data.message;
 
         }
 
+    } catch (err) {
 
-        // Allow next scan after 3 seconds
-        setTimeout(()=>{
-            scanned = false;
-        },3000);
+        console.error(err);
 
-
-
-    })
-
-
-    .catch(error=>{
-
-
-        console.log(error);
-
-
-        document.getElementById("result").innerHTML =
-        "Connection Error";
-
-
-        scanned = false;
-
-
-    });
-
-
-}
-
-
-
-function onScanFailure(error){
-
-    // Ignore scanning errors
-}
-
-
-
-const scanner = new Html5QrcodeScanner(
-
-    "reader",
-
-    {
-
-        fps:10,
-
-        qrbox:{
-            width:250,
-            height:250
-        },
-
-        rememberLastUsedCamera:true
+        document.getElementById("result").textContent =
+            "Unable to connect to the server.";
 
     }
 
+    setTimeout(() => {
+
+        scanned = false;
+
+        clearDisplay();
+
+    }, 3000);
+
+}
+
+function onScanFailure(error) {
+    // Ignore continuous scan errors
+}
+
+const scanner = new Html5QrcodeScanner(
+    "reader",
+    {
+        fps: 15,
+        qrbox: {
+            width: 250,
+            height: 250
+        },
+        rememberLastUsedCamera: true,
+        supportedScanTypes: [
+            Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+            Html5QrcodeScanType.SCAN_TYPE_FILE
+        ]
+    },
+    false
 );
 
-
-scanner.render(
-
-    onScanSuccess,
-
-    onScanFailure
-
-);
+scanner.render(onScanSuccess, onScanFailure);
