@@ -43,6 +43,7 @@ function onScanSuccess(decodedText, decodedResult) {
 
         if(data.success){
 
+
             document.getElementById("result").innerHTML =
             `
             <h3>Attendance Recorded</h3>
@@ -50,17 +51,21 @@ function onScanSuccess(decodedText, decodedResult) {
             Time: ${data.time}
             `;
 
+
         }
         else{
+
 
             document.getElementById("result").innerHTML =
             data.message;
 
+
         }
 
 
 
-        // Wait before allowing another scan
+
+        // Wait 3 seconds then scan again
 
         setTimeout(()=>{
 
@@ -70,6 +75,13 @@ function onScanSuccess(decodedText, decodedResult) {
 
             document.getElementById("result").innerHTML =
             "Ready for next student";
+
+
+
+            // Resume camera scanning
+
+            html5QrcodeScanner.resume();
+
 
 
         },3000);
@@ -89,7 +101,12 @@ function onScanSuccess(decodedText, decodedResult) {
         "Connection Error";
 
 
-        isProcessing=false;
+
+        isProcessing = false;
+
+
+        html5QrcodeScanner.resume();
+
 
 
     });
@@ -97,6 +114,8 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
 }
+
+
 
 
 
