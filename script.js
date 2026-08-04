@@ -3,15 +3,14 @@ const WEB_APP_URL =
 
 
 let isProcessing = false;
-let html5QrcodeScanner;
 
 
 
 function onScanSuccess(decodedText, decodedResult) {
 
 
-    // Prevent duplicate scanning
-    if (isProcessing) {
+    // Prevent repeated scanning
+    if(isProcessing){
         return;
     }
 
@@ -23,30 +22,6 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
     console.log("QR DATA:", studentQR);
-
-
-
-    // Stop scanner immediately
-    html5QrcodeScanner.clear()
-    .then(() => {
-        console.log("Scanner stopped");
-    })
-    .catch(error => {
-        console.log("Stop scanner error:", error);
-    });
-
-
-
-    if(studentQR === ""){
-
-
-        document.getElementById("result").innerHTML =
-        "Invalid QR Code";
-
-
-        return;
-
-    }
 
 
 
@@ -69,25 +44,19 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
             document.getElementById("result").innerHTML =
-
             `
             <h3>Attendance Recorded</h3>
 
-            <p>
             Name: ${data.name}<br>
-            Action: ${data.action}<br>
             Time: ${data.time}
-            </p>
             `;
 
 
         }
-
         else{
 
 
             document.getElementById("result").innerHTML =
-
             `
             <h3>${data.message}</h3>
             `;
@@ -96,10 +65,25 @@ function onScanSuccess(decodedText, decodedResult) {
         }
 
 
+
+        // Allow next scan after 3 seconds
+
+        setTimeout(()=>{
+
+            isProcessing = false;
+
+            document.getElementById("result").innerHTML =
+            "Ready for next student";
+
+
+        },3000);
+
+
+
     })
 
 
-    .catch(error => {
+    .catch(error=>{
 
 
         console.log(error);
@@ -107,6 +91,13 @@ function onScanSuccess(decodedText, decodedResult) {
 
         document.getElementById("result").innerHTML =
         "Connection Error";
+
+
+        setTimeout(()=>{
+
+            isProcessing=false;
+
+        },3000);
 
 
     });
@@ -117,23 +108,19 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
 
-
-// Initialize QR Scanner
-
-html5QrcodeScanner = new Html5QrcodeScanner(
+let html5QrcodeScanner =
+new Html5QrcodeScanner(
 
     "reader",
 
     {
-        fps: 10,
-        qrbox: 250
+        fps:10,
+        qrbox:250
     }
 
 );
 
 
-
-// Start Scanner
 
 html5QrcodeScanner.render(
 
