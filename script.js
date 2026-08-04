@@ -1,33 +1,62 @@
-const WEB_APP_URL = 
+const WEB_APP_URL =
 "https://script.google.com/macros/s/AKfycbyutbyoY5Y64Zt7uuUxGLrAhIwQYfTkbLovfaqhFfxGO08W1Y8Os3wJAfMHLTcZ_Lme/exec";
 
 
-let scanned = false;
+let isProcessing = false;
+let html5QrcodeScanner;
+
 
 
 function onScanSuccess(decodedText, decodedResult) {
 
 
-    // Prevent duplicate scans
-    if(scanned){
+    // Prevent duplicate scanning
+    if (isProcessing) {
         return;
     }
 
 
-    scanned = true;
+    isProcessing = true;
 
 
-    console.log("QR DATA:", decodedText);
+    const studentQR = decodedText.trim();
+
+
+    console.log("QR DATA:", studentQR);
 
 
 
-    const qrData = decodedText.trim();
+    // Stop scanner immediately
+    html5QrcodeScanner.clear()
+    .then(() => {
+        console.log("Scanner stopped");
+    })
+    .catch(error => {
+        console.log("Stop scanner error:", error);
+    });
 
 
 
-    fetch(WEB_APP_URL + "?id=" + encodeURIComponent(qrData))
+    if(studentQR === ""){
+
+
+        document.getElementById("result").innerHTML =
+        "Invalid QR Code";
+
+
+        return;
+
+    }
+
+
+
+    fetch(
+        WEB_APP_URL + "?id=" + encodeURIComponent(studentQR)
+    )
+
 
     .then(response => response.json())
+
 
     .then(data => {
 
@@ -35,41 +64,50 @@ function onScanSuccess(decodedText, decodedResult) {
         console.log(data);
 
 
+
         if(data.success){
 
+
             document.getElementById("result").innerHTML =
+
             `
             <h3>Attendance Recorded</h3>
+
+            <p>
             Name: ${data.name}<br>
             Action: ${data.action}<br>
             Time: ${data.time}
+            </p>
             `;
 
 
         }
+
         else{
 
+
             document.getElementById("result").innerHTML =
-            data.message;
+
+            `
+            <h3>${data.message}</h3>
+            `;
+
 
         }
-
-
-        // STOP CAMERA AFTER SUCCESS
-        html5QrcodeScanner.clear();
 
 
     })
 
 
-    .catch(error=>{
+    .catch(error => {
+
 
         console.log(error);
+
 
         document.getElementById("result").innerHTML =
         "Connection Error";
 
-        html5QrcodeScanner.clear();
 
     });
 
@@ -78,15 +116,27 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
 
-let html5QrcodeScanner = new Html5QrcodeScanner(
+
+
+// Initialize QR Scanner
+
+html5QrcodeScanner = new Html5QrcodeScanner(
 
     "reader",
+
     {
-        fps:10,
-        qrbox:250
+        fps: 10,
+        qrbox: 250
     }
 
 );
 
 
-html5QrcodeScanner.render(onScanSuccess);
+
+// Start Scanner
+
+html5QrcodeScanner.render(
+
+    onScanSuccess
+
+);
