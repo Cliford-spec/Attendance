@@ -4,12 +4,13 @@ const WEB_APP_URL =
 
 let isProcessing = false;
 
+let html5QrcodeScanner;
+
 
 
 function onScanSuccess(decodedText, decodedResult) {
 
 
-    // Prevent repeated scanning
     if(isProcessing){
         return;
     }
@@ -18,7 +19,7 @@ function onScanSuccess(decodedText, decodedResult) {
     isProcessing = true;
 
 
-    const studentQR = decodedText.trim();
+    let studentQR = decodedText.trim();
 
 
     console.log("QR DATA:", studentQR);
@@ -42,35 +43,30 @@ function onScanSuccess(decodedText, decodedResult) {
 
         if(data.success){
 
-
             document.getElementById("result").innerHTML =
             `
             <h3>Attendance Recorded</h3>
-
             Name: ${data.name}<br>
             Time: ${data.time}
             `;
 
-
         }
         else{
 
-
             document.getElementById("result").innerHTML =
-            `
-            <h3>${data.message}</h3>
-            `;
-
+            data.message;
 
         }
 
 
 
-        // Allow next scan after 3 seconds
+        // Wait before allowing another scan
 
         setTimeout(()=>{
 
+
             isProcessing = false;
+
 
             document.getElementById("result").innerHTML =
             "Ready for next student";
@@ -93,14 +89,11 @@ function onScanSuccess(decodedText, decodedResult) {
         "Connection Error";
 
 
-        setTimeout(()=>{
-
-            isProcessing=false;
-
-        },3000);
+        isProcessing=false;
 
 
     });
+
 
 
 }
@@ -108,8 +101,7 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
 
-let html5QrcodeScanner =
-new Html5QrcodeScanner(
+html5QrcodeScanner = new Html5QrcodeScanner(
 
     "reader",
 
