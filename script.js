@@ -2,75 +2,119 @@ const WEB_APP_URL =
 "https://script.google.com/macros/s/AKfycbyutbyoY5Y64Zt7uuUxGLrAhIwQYfTkbLovfaqhFfxGO08W1Y8Os3wJAfMHLTcZ_Lme/exec";
 
 
+
 let isProcessing = false;
 
 let html5QrcodeScanner;
 
 
 
+
 function onScanSuccess(decodedText, decodedResult) {
 
 
+
+    // Prevent duplicate scans
+
     if(isProcessing){
+
         return;
+
     }
+
 
 
     isProcessing = true;
 
 
+
     let studentQR = decodedText.trim();
+
 
 
     console.log("QR DATA:", studentQR);
 
 
 
+
+
     fetch(
+
         WEB_APP_URL + "?id=" + encodeURIComponent(studentQR)
+
     )
+
 
 
     .then(response => response.json())
 
 
+
     .then(data => {
+
 
 
         console.log(data);
 
 
 
+
         if(data.success){
 
 
+
+            document.getElementById("studentName").innerHTML =
+            "Name: " + data.name;
+
+
+
+            document.getElementById("action").innerHTML =
+            "Action: " + data.action;
+
+
+
+            document.getElementById("scanTime").innerHTML =
+            "Time: " + data.time;
+
+
+
+            document.getElementById("status").innerHTML =
+            "Status: Present";
+
+
+
             document.getElementById("result").innerHTML =
-            `
-            <h3>Attendance Recorded</h3>
-            Name: ${data.name}<br>
-            Time: ${data.time}
-            `;
+            "Attendance Recorded";
+
 
 
         }
-        else{
+
+
+
+        else {
+
 
 
             document.getElementById("result").innerHTML =
             data.message;
 
 
+
         }
 
 
 
 
-        // Wait 3 seconds then scan again
 
-        setTimeout(()=>{
+        // Allow next scan after 3 seconds
+
+        setTimeout(function(){
+
 
 
             isProcessing = false;
+
 
 
             document.getElementById("result").innerHTML =
@@ -78,9 +122,19 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
 
-            // Resume camera scanning
+            // Resume scanner
 
-            html5QrcodeScanner.resume();
+            try {
+
+                html5QrcodeScanner.resume();
+
+            }
+
+            catch(error){
+
+                console.log(error);
+
+            }
 
 
 
@@ -88,13 +142,18 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
 
+
+
     })
 
 
-    .catch(error=>{
+
+    .catch(error => {
+
 
 
         console.log(error);
+
 
 
         document.getElementById("result").innerHTML =
@@ -105,7 +164,18 @@ function onScanSuccess(decodedText, decodedResult) {
         isProcessing = false;
 
 
-        html5QrcodeScanner.resume();
+
+        try {
+
+            html5QrcodeScanner.resume();
+
+        }
+
+        catch(error){
+
+            console.log(error);
+
+        }
 
 
 
@@ -120,21 +190,33 @@ function onScanSuccess(decodedText, decodedResult) {
 
 
 
+
 html5QrcodeScanner = new Html5QrcodeScanner(
+
 
     "reader",
 
+
     {
+
         fps:10,
+
         qrbox:250
+
     }
+
 
 );
 
 
 
+
+
+
 html5QrcodeScanner.render(
 
+
     onScanSuccess
+
 
 );
