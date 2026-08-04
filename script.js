@@ -1,113 +1,73 @@
-const WEB_APP_URL =
+const WEB_APP_URL = 
 "https://script.google.com/macros/s/AKfycbyutbyoY5Y64Zt7uuUxGLrAhIwQYfTkbLovfaqhFfxGO08W1Y8Os3wJAfMHLTcZ_Lme/exec";
 
-let scanned = false;
 
-function clearDisplay() {
-    document.getElementById("studentName").textContent = "";
-    document.getElementById("action").textContent = "";
-    document.getElementById("scanTime").textContent = "";
-    document.getElementById("status").textContent = "";
-    document.getElementById("result").textContent = "Waiting for scan...";
-}
+function onScanSuccess(decodedText, decodedResult) {
 
-async function onScanSuccess(decodedText) {
+    console.log("QR DATA:", decodedText);
 
-    if (scanned) return;
 
-    scanned = true;
+    const qrData = decodedText.trim();
 
-    const studentID = decodedText.trim();
 
-    document.getElementById("result").textContent = "Checking attendance...";
+    if(qrData === ""){
+        document.getElementById("result").innerHTML =
+        "Invalid QR Code";
+        return;
+    }
 
-    try {
 
-        const controller = new AbortController();
+    fetch(WEB_APP_URL + "?id=" + encodeURIComponent(qrData))
+    .then(response => response.json())
+    .then(data => {
 
-        const timeout = setTimeout(() => controller.abort(), 10000);
 
-        const response = await fetch(
-            WEB_APP_URL + "?id=" + encodeURIComponent(studentID),
-            {
-                signal: controller.signal
-            }
-        );
+        console.log(data);
 
-        clearTimeout(timeout);
 
-        const data = await response.json();
+        if(data.success){
 
-        if (data.success) {
+            document.getElementById("result").innerHTML =
+            `
+            <h3>Attendance Recorded</h3>
+            Name: ${data.name}<br>
+            Action: ${data.action}<br>
+            Time: ${data.time}
+            `;
 
-            document.getElementById("studentName").textContent = data.name;
+        }
+        else{
 
-            document.getElementById("action").textContent =
-                data.action === "timein"
-                ? "TIME IN SUCCESSFUL"
-                : "TIME OUT SUCCESSFUL";
-
-            document.getElementById("scanTime").textContent =
-                data.time;
-
-            document.getElementById("status").textContent =
-                "STATUS: " + data.status;
-
-            document.getElementById("result").textContent = "";
-
-        } else {
-
-            document.getElementById("studentName").textContent = "";
-
-            document.getElementById("action").textContent = "";
-
-            document.getElementById("scanTime").textContent = "";
-
-            document.getElementById("status").textContent = "";
-
-            document.getElementById("result").textContent =
-                data.message;
+            document.getElementById("result").innerHTML =
+            data.message;
 
         }
 
-    } catch (err) {
 
-        console.error(err);
+    })
+    .catch(error=>{
 
-        document.getElementById("result").textContent =
-            "Unable to connect to the server.";
+        console.log(error);
 
-    }
+        document.getElementById("result").innerHTML =
+        "Connection Error";
 
-    setTimeout(() => {
+    });
 
-        scanned = false;
-
-        clearDisplay();
-
-    }, 3000);
 
 }
 
-function onScanFailure(error) {
-    // Ignore continuous scan errors
-}
+
 
 const scanner = new Html5QrcodeScanner(
     "reader",
     {
-        fps: 15,
-        qrbox: {
-            width: 250,
-            height: 250
-        },
-        rememberLastUsedCamera: true,
-        supportedScanTypes: [
-            Html5QrcodeScanType.SCAN_TYPE_CAMERA,
-            Html5QrcodeScanType.SCAN_TYPE_FILE
-        ]
-    },
-    false
+        fps:10,
+        qrbox:250
+    }
 );
 
-scanner.render(onScanSuccess, onScanFailure);
+
+scanner.render(
+    onScanSuccess
+);
